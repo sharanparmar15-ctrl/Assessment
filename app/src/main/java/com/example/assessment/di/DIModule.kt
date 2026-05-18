@@ -29,8 +29,7 @@ object DIModule {
 }
 
 object RetrofitClient {
-
-    private const val TIME_OUT: Long = 120
+    private const val TIME_OUT: Long = 40
 
     val okHttpClient = OkHttpClient.Builder()
         .readTimeout(TIME_OUT, TimeUnit.SECONDS)

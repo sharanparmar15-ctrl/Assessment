@@ -40,7 +40,7 @@ import androidx.navigation.NavController
 import com.example.assessment.R
 import com.example.assessment.data.model.CustomerRequest
 import com.example.assessment.data.model.CustomerResponse
-import com.example.assessment.ui.state.ApiState
+import com.example.assessment.ui.state.UIState
 import com.example.assessment.ui.common.CustomTextField
 import com.example.assessment.ui.navigation.NavRoutes
 import com.example.assessment.utils.ValidationUtils.validateEmail
@@ -70,15 +70,15 @@ fun RegisterScreen(navController : NavController) {
                     isPhoneNoValid
         }
     }
-    val apiState by viewmodel.apiState.collectAsStateWithLifecycle()
+    val apiState by viewmodel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val isLoading by remember {
-        derivedStateOf { apiState is ApiState.Loading }
+        derivedStateOf { apiState is UIState.Loading }
     }
     LaunchedEffect(apiState) {
         when (val state  = apiState) {
-            is ApiState.Success<*> -> {
-                val data = state.response as CustomerResponse
+            is UIState.Success<*> -> {
+                val data = state.data as CustomerResponse
                 navController.navigate(
                     NavRoutes.Success.createRoute(
                         name    = data.name,
@@ -90,9 +90,9 @@ fun RegisterScreen(navController : NavController) {
                     popUpTo(NavRoutes.Register.route) { inclusive = true }
                 }
             }
-            is ApiState.Error<*> -> {
+            is UIState.Error -> {
                 snackbarHostState.showSnackbar(
-                    message = (state.error ?: "Something went wrong") as String,
+                    message = state.message,
                     duration = SnackbarDuration.Short
                 )
             }

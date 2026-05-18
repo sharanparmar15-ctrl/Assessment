@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.assessment.data.model.CustomerRequest
 import com.example.assessment.data.repository.RegisterUserRepository
-import com.example.assessment.ui.state.ApiState
+import com.example.assessment.ui.state.UIState
+import com.example.assessment.data.network.ApiResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -18,29 +18,28 @@ import javax.inject.Inject
 class RegisterUserViewModel @Inject constructor(private val repo: RegisterUserRepository) :
     ViewModel() {
 
-    private val _apiState =
-        MutableStateFlow<ApiState<*>>(
-            ApiState.Idle
+    private val _uiState =
+        MutableStateFlow<UIState<*>>(
+            UIState.Idle
         )
 
-    val apiState = _apiState.asStateFlow()
+    val uiState = _uiState.asStateFlow()
 
     fun registerCustomer(request: CustomerRequest) {
-        try {
-            viewModelScope.launch {
-                _apiState.value = ApiState.Loading
-                val response = withContext(Dispatchers.IO) {
-                    repo.registerCustomers(request)
-                }
-                if (response.isSuccessful) {
-                    _apiState.value = ApiState.Success(response.body())
-                } else {
-                    _apiState.value = ApiState.Error("Error")
+        viewModelScope.launch {
+
+            _uiState.value = UIState.Loading
+
+            when (val response = repo.registerCustomers(request)) {
+
+                is ApiResult.Success -> {
+                    _uiState.value = UIState.Success(response.data)
                 }
 
+                is ApiResult.Error -> {
+                    _uiState.value = UIState.Error(response.message)
+                }
             }
-        } catch (_: Exception) {
-            _apiState.value = ApiState.Error("Something went Wrong")
         }
     }
 }
